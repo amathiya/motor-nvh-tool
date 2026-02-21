@@ -1,85 +1,52 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>NVH Order Calculator</title>
+    <title>Motor NVH Calculator</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            padding: 40px;
+            font-family: Arial;
             text-align: center;
+            margin-top: 40px;
         }
-
-        .container {
-            background: white;
-            padding: 30px;
-            width: 600px;
-            margin: auto;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-        }
-
         input {
-            width: 200px;
             padding: 8px;
-            margin: 10px 0;
+            margin: 5px;
         }
-
         button {
-            background-color: yellow;
-            border: none;
-            padding: 10px 15px;
+            padding: 8px 15px;
+            margin: 10px;
             cursor: pointer;
-            font-weight: bold;
         }
-
         .result {
-            margin-top: 20px;
-            background: #eee;
-            padding: 10px;
-        }
-
-        a {
-            display: block;
-            margin-top: 30px;
+            margin-top: 15px;
+            font-weight: bold;
         }
     </style>
 </head>
-
 <body>
 
-<div class="container">
-    <h2>Motor NVH Order Calculator</h2>
+<h2>Motor NVH Calculator</h2>
 
-    <label>No of Rotor Poles</label><br>
-    <input type="number" id="poles"><br>
+<input type="number" id="poles" placeholder="Number of Poles">
+<input type="number" id="slots" placeholder="Number of Slots">
+<br>
+<button onclick="calculate()">Submit</button>
 
-    <label>No of Stator Slots</label><br>
-    <input type="number" id="slots"><br>
-
-    <label>Maximum Motor RPM</label><br>
-    <input type="number" id="rpm"><br><br>
-
-    <button onclick="calculate()">Submit</button>
-
-    <div class="result">
-        <p><strong>Dominant Spatial Order:</strong></p>
-        <div id="dominant"></div>
-
-        <p><strong>Cogging Torque Orders (First 5):</strong></p>
-        <div id="cogging"></div>
-
-        <p><strong>Electrical Harmonics:</strong></p>
-        <div id="harmonics"></div>
-    </div>
-
-    <button onclick="showMode()">Click here to see dominant spatial order</button>
-    <div id="modeText" class="result"></div>
-
-    <a href="index.html">← Back to Home</a>
+<div class="result">
+    <p>Dominant Spatial Order: <span id="dominant"></span></p>
+    <p>Electrical Harmonics: <span id="harmonics"></span></p>
+    <p>Cogging Harmonics: <span id="cogging"></span></p>
 </div>
 
+<br>
+<button onclick="showMode()">Click here to see dominant spatial order</button>
+
+<div id="modeText" class="result"></div>
+<br>
+<img id="lobeImage" width="300" style="display:none;">
+
 <script>
+
 function gcd(a, b) {
     return b === 0 ? a : gcd(b, a % b);
 }
@@ -87,6 +54,8 @@ function gcd(a, b) {
 function lcm(a, b) {
     return (a * b) / gcd(a, b);
 }
+
+let currentDominant = 0;
 
 function calculate() {
 
@@ -98,36 +67,58 @@ function calculate() {
         return;
     }
 
+    // Dominant Spatial Order
     let dominant = gcd(poles, slots);
+    currentDominant = dominant;
 
     document.getElementById("dominant").innerHTML =
         dominant + " → " + dominant + "-lobe deformation tendency";
 
+    // Electrical Harmonics (P × n)
+    let harmText = "";
+    for (let i = 1; i <= 10; i++) {
+        harmText += "H" + (poles * i) + " ";
+    }
+    document.getElementById("harmonics").innerHTML = harmText;
+
+    // Cogging Harmonics (LCM × n)
     let cogBase = lcm(poles, slots);
     let cogText = "";
     for (let i = 1; i <= 5; i++) {
         cogText += "H" + (cogBase * i) + " ";
     }
-
     document.getElementById("cogging").innerHTML = cogText;
 
-    let harmText = "";
-    for (let i = 1; i <= 5; i++) {
-        harmText += "H" + (dominant * i * 10) + " ";
-    }
-
-    document.getElementById("harmonics").innerHTML = harmText;
+    // Show GIF automatically
+    showLobeGif(dominant);
 }
 
 function showMode() {
 
-    let poles = parseInt(document.getElementById("poles").value);
-    let slots = parseInt(document.getElementById("slots").value);
-    let dominant = gcd(poles, slots);
+    if (currentDominant === 0) {
+        alert("Please click Submit first.");
+        return;
+    }
 
     document.getElementById("modeText").innerHTML =
-        "Check " + dominant + "-lobe mechanical mode in ANSYS modal results.";
+        "Dominant spatial excitation: " +
+        currentDominant + "-lobe rotating electromagnetic force pattern.";
+
+    showLobeGif(currentDominant);
 }
+
+function showLobeGif(order) {
+
+    let img = document.getElementById("lobeImage");
+
+    if (order >= 2 && order <= 6) {
+        img.src = "assets/" + order + "lobe.gif";
+        img.style.display = "block";
+    } else {
+        img.style.display = "none";
+    }
+}
+
 </script>
 
 </body>

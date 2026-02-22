@@ -11,6 +11,7 @@
         input {
             padding: 8px;
             margin: 5px;
+            width: 160px;
         }
         button {
             padding: 8px 15px;
@@ -18,8 +19,11 @@
             cursor: pointer;
         }
         .result {
-            margin-top: 15px;
+            margin-top: 20px;
             font-weight: bold;
+        }
+        img {
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -30,7 +34,7 @@
 <input type="number" id="poles" placeholder="Number of Poles">
 <input type="number" id="slots" placeholder="Number of Slots">
 <br>
-<button onclick="calculate()">Submit</button>
+<button onclick="calculate()">Calculate</button>
 
 <div class="result">
     <p>Dominant Spatial Order: <span id="dominant"></span></p>
@@ -38,12 +42,7 @@
     <p>Cogging Harmonics: <span id="cogging"></span></p>
 </div>
 
-<br>
-<button onclick="showMode()">Click here to see dominant spatial order</button>
-
-<div id="modeText" class="result"></div>
-<br>
-<img id="lobeImage" width="300" style="display:none;">
+<img id="lobeImage" width="350" style="display:none;">
 
 <script>
 
@@ -55,8 +54,6 @@ function lcm(a, b) {
     return (a * b) / gcd(a, b);
 }
 
-let currentDominant = 0;
-
 function calculate() {
 
     let poles = parseInt(document.getElementById("poles").value);
@@ -67,44 +64,28 @@ function calculate() {
         return;
     }
 
-    // Dominant Spatial Order
+    // Dominant spatial order
     let dominant = gcd(poles, slots);
-    currentDominant = dominant;
 
     document.getElementById("dominant").innerHTML =
-        dominant + " → " + dominant + "-lobe deformation tendency";
+        dominant + "  →  " + dominant + "-lobe deformation tendency";
 
-    // Electrical Harmonics (P × n)
+    // Electrical harmonics (poles × 1 to 10)
     let harmText = "";
     for (let i = 1; i <= 10; i++) {
-        harmText += "H" + (poles * i) + " ";
+        harmText += "H" + (poles * i) + "  ";
     }
     document.getElementById("harmonics").innerHTML = harmText;
 
-    // Cogging Harmonics (LCM × n)
+    // Cogging harmonics (LCM based)
     let cogBase = lcm(poles, slots);
     let cogText = "";
     for (let i = 1; i <= 5; i++) {
-        cogText += "H" + (cogBase * i) + " ";
+        cogText += "H" + (cogBase * i) + "  ";
     }
     document.getElementById("cogging").innerHTML = cogText;
 
-    // Show GIF automatically
     showLobeGif(dominant);
-}
-
-function showMode() {
-
-    if (currentDominant === 0) {
-        alert("Please click Submit first.");
-        return;
-    }
-
-    document.getElementById("modeText").innerHTML =
-        "Dominant spatial excitation: " +
-        currentDominant + "-lobe rotating electromagnetic force pattern.";
-
-    showLobeGif(currentDominant);
 }
 
 function showLobeGif(order) {
@@ -112,7 +93,7 @@ function showLobeGif(order) {
     let img = document.getElementById("lobeImage");
 
     if (order >= 2 && order <= 6) {
-        img.src = "assets/" + order + "lobe.gif";
+        img.src = "./assets/" + order + "lobe.gif";
         img.style.display = "block";
     } else {
         img.style.display = "none";
